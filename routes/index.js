@@ -6,7 +6,7 @@ const { notFoundError } = require("../utils/errors");
 router.use("/users", user);
 router.use("/items", clothingItem);
 
-router.use((res) => {
+router.use((req, res) => {
   res.status(notFoundError).send({ message: "Requested router not found" });
 });
 
