@@ -1,29 +1,31 @@
-const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
-const routes = require("./routes");
+const express = require("express");
+const helmet = require("helmet");
+const { createUser, login } = require("./controllers/users");
+const { getItems } = require("./controllers/clothingItems");
+const auth = require("./middlewares/auth");
 
 const app = express();
 
-const { PORT = 3001 } = process.env;
+mongoose.set("strictQuery", true);
+mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
-mongoose
-  .connect("mongodb://127.0.0.1:27017/wtwr_db")
-  .then(() => {
-    console.log("Connected to DB");
-  })
-  .catch(console.error);
+const routes = require("./routes");
 
-  app.use((req, res, next) => {
-    req.user = {
-      _id: "65fa0b06ef37754e265e3207",
-    };
-    next();
-  });
-
+app.use(cors());
 app.use(express.json());
+app.use(helmet());
 
+app.post("/signup", createUser);
+app.post("/signin", login);
+app.get("/items", getItems);
+
+app.use(auth);
 app.use(routes);
 
+const { PORT = 3001 } = process.env;
+
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`App listening at ${PORT}`);
 });

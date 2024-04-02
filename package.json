@@ -11,7 +11,11 @@
   "author": "Thinh Nguyen",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
     "express": "^4.18.3",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^6.6.1",
     "validator": "^13.11.0"
   },
