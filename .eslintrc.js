@@ -6,12 +6,23 @@ module.exports = {
   },
   // update the extensions
   extends: ["eslint:recommended", "airbnb-base", "prettier"],
-  overrides: [],
+  overrides: [
+    {
+      env: {
+        node: true,
+      },
+      files: [".eslintrc.{js,cjs}"],
+      parserOptions: {
+        sourceType: "script",
+      },
+    },
+  ],
   parserOptions: {
     ecmaVersion: "latest",
   },
   rules: {
+    "no-underscore-dangle": "off",
     "no-console": "off",
-    "no-underscore-dangle": ["error", { allow: ["_id"] }],
+    "arrow-body-style": "off",
   },
 };

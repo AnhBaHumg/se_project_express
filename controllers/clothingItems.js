@@ -67,7 +67,7 @@ function deleteItem(req, res) {
         res.status(invalidDataError).send({ message: "Invalid data" });
       } else if (e.name === "DocumentNotFoundError") {
         res
-          .status(forbiddenError)
+          .status(notFoundError)
           .send({ message: "Requested resource not found" });
       } else if (e.message === "You are not authorized to delete this item") {
         res

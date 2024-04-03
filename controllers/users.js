@@ -94,7 +94,7 @@ function createUser(req, res) {
         res.status(invalidDataError).send({ message: "Invalid data" });
       } else if (e.message === "Email already in use") {
         res
-          .status(invalidDataError)
+          .status(conflictError)
           .send({ message: "An account with this email already exists" });
       } else {
         res
