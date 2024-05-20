@@ -5,10 +5,11 @@ const {
   likeItem,
   dislikeItem,
 } = require("../controllers/clothingItems");
+const { validateNewItem, validateId } = require("../middleware/validation");
 
-router.post("/", createItem);
-router.delete("/:id", deleteItem);
-router.put("/:id/likes", likeItem);
-router.delete("/:id/likes", dislikeItem);
+router.post("/", validateNewItem, createItem);
+router.delete("/:id", validateId, deleteItem);
+router.put("/:id/likes", validateId, likeItem);
+router.delete("/:id/likes", validateId, dislikeItem);
 
 module.exports = router;

@@ -1,17 +1,15 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
-const { JWT_SECRET } = require("../utils/config");
+const { devSecret } = require("../utils/config");
+const { NODE_ENV, JWT_SECRET } = process.env;
 
-const {
-  invalidDataError,
-  notFoundError,
-  serverError,
-  unauthorizedError,
-  conflictError,
-} = require("../utils/errors");
+const BadRequestError = require("../utils/errors/BadRequestError");
+const NotFoundError = require("../utils/errors/NotFoundError");
+const ConflictError = require("../utils/errors/ConflicError");
+const UnauthorizedError = require("../utils/errors/UnathorizedError");
 
-function getCurrentUser(req, res) {
+function getCurrentUser(req, res, next) {
   User.findById(req.user._id)
     .then((currentUser) => {
       if (!currentUser) {
@@ -23,18 +21,16 @@ function getCurrentUser(req, res) {
       console.error(e);
 
       if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.message === "User not found") {
-        res.status(notFoundError).send({ message: "User not found" });
+        next(new BadRequestError("Invalid input data"));
+      } else if (err.message === "User not found") {
+        next(new NotFoundError("User not found"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(e);
       }
     });
 }
 
-function updateCurrentUser(req, res) {
+function updateCurrentUser(req, res, next) {
   const { name, avatar } = req.body;
 
   User.findByIdAndUpdate(
@@ -50,22 +46,18 @@ function updateCurrentUser(req, res) {
       console.error(e);
 
       if (e.name === "ValidationError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "DocumentNotFoundError") {
-        res
-          .status(notFoundError)
-          .send({ message: "Requested resource not found" });
+        next(new BadRequestError("Invalid input data"));
+      } else if (err.name === "CastError") {
+        next(new BadRequestError("Invalid input format"));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Cannot update nonexistent user"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(e);
       }
     });
 }
 
-function createUser(req, res) {
+function createUser(req, res, next) {
   const { name, avatar, email, password } = req.body;
 
   User.findOne({ email })
@@ -89,35 +81,33 @@ function createUser(req, res) {
       console.error(e);
 
       if (e.name === "ValidationError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.message === "Email already in use") {
-        res
-          .status(conflictError)
-          .send({ message: "An account with this email already exists" });
+        next(new BadRequestError("Invalid input data"));
+      } else if (err.name === "CastError") {
+        next(new BadRequestError("Invalid input format"));
+      } else if (err.message === "Email already in use") {
+        next(new ConflictError("Email already in use"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(e);
       }
     });
 }
 
-function login(req, res) {
+function login(req, res, next) {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(invalidDataError)
-      .send({ message: "Invalid email or password" });
+    next(new BadRequestError("Invalid email or password"));
   }
 
   return User.findUserByCredentials(email, password)
     .then((existingUser) => {
-      const token = jwt.sign({ _id: existingUser._id }, JWT_SECRET, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { _id: existingUser._id },
+        NODE_ENV === "production" ? JWT_SECRET : devSecret,
+        {
+          expiresIn: "7d",
+        },
+      );
 
       res.status(200).send({ data: token });
     })
@@ -125,13 +115,9 @@ function login(req, res) {
       console.error(e);
 
       if (e.message === "Incorrect email or password") {
-        res
-          .status(unauthorizedError)
-          .send({ message: "Incorrect email or password" });
+        next(new UnauthorizedError("Incorrect email or password"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(err);
       }
     });
 }

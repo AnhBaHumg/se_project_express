@@ -1,27 +1,20 @@
 const clothingItem = require("../models/clothingItem");
-const {
-  invalidDataError,
-  notFoundError,
-  serverError,
-  forbiddenError,
-} = require("../utils/errors");
+const BadRequestError = require("../utils/errors/BadRequestError");
+const ForbiddenError = require("../utils/errors/ForbiddenError");
+const NotFoundError = require("../utils/errors/NotFoundError");
 
-function getItems(req, res) {
+function getItems(req, res, next) {
   clothingItem
     .find({})
     .then((items) => {
       res.status(200).send({ data: items });
     })
     .catch((e) => {
-      console.error(e);
-
-      res
-        .status(serverError)
-        .send({ message: "An error occurred on the server" });
+      next(e);
     });
 }
 
-function createItem(req, res) {
+function createItem(req, res, next) {
   const { name, weather, imageUrl } = req.body;
 
   const owner = req.user._id;
@@ -32,23 +25,17 @@ function createItem(req, res) {
       res.status(200).send({ data: item });
     })
     .catch((e) => {
-      console.error(e);
-
-      console.log(e);
-
       if (e.name === "ValidationError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
+        next(new BadRequestError("Invalid input data"));
+      } else if (err.name === "CastError") {
+        next(new BadRequestError("Invalid input format"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occured on the server" });
+        next(e);
       }
     });
 }
 
-function deleteItem(req, res) {
+function deleteItem(req, res, next) {
   return clothingItem
     .findById(req.params.id)
     .orFail()
@@ -61,27 +48,19 @@ function deleteItem(req, res) {
       });
     })
     .catch((e) => {
-      console.error(e);
-
       if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "DocumentNotFoundError") {
-        res
-          .status(notFoundError)
-          .send({ message: "Requested resource not found" });
-      } else if (e.message === "You are not authorized to delete this item") {
-        res
-          .status(forbiddenError)
-          .send({ message: "You are not authorized to delete this item" });
+        next(new BadRequestError("Invalid input format"));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Cannot delete nonexistent item"));
+      } else if (err.message === "You are not authorized to delete this item") {
+        next(new ForbiddenError("You are not authorized to delete this item"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(e);
       }
     });
 }
 
-function likeItem(req, res) {
+function likeItem(req, res, next) {
   clothingItem
     .findByIdAndUpdate(
       req.params.id,
@@ -93,23 +72,17 @@ function likeItem(req, res) {
       res.status(200).send(item);
     })
     .catch((e) => {
-      console.error(e);
-
       if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "DocumentNotFoundError") {
-        res
-          .status(notFoundError)
-          .send({ message: "Requested resource not found" });
+        next(new BadRequestError("Invalid input format"));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Cannot like nonexistent item"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(err);
       }
     });
 }
 
-function dislikeItem(req, res) {
+function dislikeItem(req, res, next) {
   clothingItem
     .findByIdAndUpdate(
       req.params.id,
@@ -121,18 +94,12 @@ function dislikeItem(req, res) {
       res.status(200).send(item);
     })
     .catch((e) => {
-      console.error(e);
-
       if (e.name === "CastError") {
-        res.status(invalidDataError).send({ message: "Invalid data" });
-      } else if (e.name === "DocumentNotFoundError") {
-        res
-          .status(notFoundError)
-          .send({ message: "Requested resource not found" });
+        next(new BadRequestError("Invalid input format"));
+      } else if (err.name === "DocumentNotFoundError") {
+        next(new NotFoundError("Cannot dislike nonexistent item"));
       } else {
-        res
-          .status(serverError)
-          .send({ message: "An error occurred on the server" });
+        next(e);
       }
     });
 }
