@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
-const { devSecret } = require("../utils/config");
+
 const { NODE_ENV, JWT_SECRET } = process.env;
+const { devSecret } = require("../utils/config");
 
 const BadRequestError = require("../utils/errors/BadRequestError");
 const NotFoundError = require("../utils/errors/NotFoundError");
@@ -22,7 +23,7 @@ function getCurrentUser(req, res, next) {
 
       if (e.name === "CastError") {
         next(new BadRequestError("Invalid input data"));
-      } else if (err.message === "User not found") {
+      } else if (e.message === "User not found") {
         next(new NotFoundError("User not found"));
       } else {
         next(e);
@@ -47,9 +48,9 @@ function updateCurrentUser(req, res, next) {
 
       if (e.name === "ValidationError") {
         next(new BadRequestError("Invalid input data"));
-      } else if (err.name === "CastError") {
+      } else if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (e.name === "DocumentNotFoundError") {
         next(new NotFoundError("Cannot update nonexistent user"));
       } else {
         next(e);
@@ -82,9 +83,9 @@ function createUser(req, res, next) {
 
       if (e.name === "ValidationError") {
         next(new BadRequestError("Invalid input data"));
-      } else if (err.name === "CastError") {
+      } else if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
-      } else if (err.message === "Email already in use") {
+      } else if (e.message === "Email already in use") {
         next(new ConflictError("Email already in use"));
       } else {
         next(e);
@@ -117,7 +118,7 @@ function login(req, res, next) {
       if (e.message === "Incorrect email or password") {
         next(new UnauthorizedError("Incorrect email or password"));
       } else {
-        next(err);
+        next(e);
       }
     });
 }

@@ -27,7 +27,7 @@ function createItem(req, res, next) {
     .catch((e) => {
       if (e.name === "ValidationError") {
         next(new BadRequestError("Invalid input data"));
-      } else if (err.name === "CastError") {
+      } else if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
       } else {
         next(e);
@@ -50,9 +50,9 @@ function deleteItem(req, res, next) {
     .catch((e) => {
       if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (e.name === "DocumentNotFoundError") {
         next(new NotFoundError("Cannot delete nonexistent item"));
-      } else if (err.message === "You are not authorized to delete this item") {
+      } else if (e.message === "You are not authorized to delete this item") {
         next(new ForbiddenError("You are not authorized to delete this item"));
       } else {
         next(e);
@@ -74,10 +74,10 @@ function likeItem(req, res, next) {
     .catch((e) => {
       if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (e.name === "DocumentNotFoundError") {
         next(new NotFoundError("Cannot like nonexistent item"));
       } else {
-        next(err);
+        next(e);
       }
     });
 }
@@ -96,7 +96,7 @@ function dislikeItem(req, res, next) {
     .catch((e) => {
       if (e.name === "CastError") {
         next(new BadRequestError("Invalid input format"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (e.name === "DocumentNotFoundError") {
         next(new NotFoundError("Cannot dislike nonexistent item"));
       } else {
         next(e);

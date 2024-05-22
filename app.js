@@ -1,13 +1,14 @@
+require("dotenv").config();
 const cors = require("cors");
 const mongoose = require("mongoose");
 const express = require("express");
 const helmet = require("helmet");
+const { errors } = require("celebrate");
 const { createUser, login } = require("./controllers/users");
 const { getItems } = require("./controllers/clothingItems");
 const auth = require("./middlewares/auth");
-const { errors } = require("celebrate");
-const errorHandler = require("./middleware/errorHandler");
-const { requestLogger, errorLogger } = require("./middleware/logger");
+const errorHandler = require("./middlewares/errorHandler");
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 console.log(process.env.NODE_ENV);
 
@@ -17,7 +18,7 @@ mongoose.set("strictQuery", true);
 mongoose.connect("mongodb://127.0.0.1:27017/wtwr_db");
 
 const routes = require("./routes");
-const { validateNewUser, validateLogin } = require("./middleware/validation");
+const { validateNewUser, validateLogin } = require("./middlewares/validation");
 
 app.use(cors());
 app.use(express.json());
@@ -31,8 +32,8 @@ app.get("/crash-test", () => {
 
 app.use(requestLogger);
 
-app.post("/signup", createUser);
-app.post("/signin", login);
+app.post("/signup", validateNewUser, createUser);
+app.post("/signin", validateLogin, login);
 app.get("/items", getItems);
 
 app.use(auth);

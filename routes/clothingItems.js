@@ -5,7 +5,7 @@ const {
   likeItem,
   dislikeItem,
 } = require("../controllers/clothingItems");
-const { validateNewItem, validateId } = require("../middleware/validation");
+const { validateNewItem, validateId } = require("../middlewares/validation");
 
 router.post("/", validateNewItem, createItem);
 router.delete("/:id", validateId, deleteItem);
