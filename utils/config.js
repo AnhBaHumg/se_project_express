@@ -1,3 +1,3 @@
-const devSecret = "HelloIAmTheSecretKey";
+const devSecret = "HelloIAmTheSecretKey"
 
 module.exports = { devSecret };
